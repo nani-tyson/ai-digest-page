@@ -148,6 +148,7 @@ kbd { font-size:11px; padding:1px 5px; border:1px solid var(--line-2); border-bo
 .badge svg { width:12px; height:12px; }
 .badge.due { background:var(--due-bg); color:var(--due); }
 .badge.good { background:var(--good-bg); color:var(--good); }
+.badge.proj { background:transparent; border:1px solid var(--line-2); color:var(--ink); }
 .stages { display:inline-flex; gap:3px; align-items:center; }
 .stages i { width:14px; height:4px; border-radius:2px; background:var(--line-2); }
 .stages i.on { background:var(--good); }
@@ -453,13 +454,15 @@ function groups() {
       { title: "Coming up", primary: "ghost", items: learning.filter(q => !(q.next_review && q.next_review <= t)).sort(byNext).map(q => ({ q, acts: ["review", "done", "skip"] })) },
     ],
     queue: [{ title: "Waiting to start", primary: "solid", items: queue.filter(q => q.status === "queued").reverse().map(q => ({ q, acts: ["start", "done", "skip"] })) }],
-    digest: [["urgent", "Urgent"], ["learn", "To learn"], ["aware", "Worth knowing"]].map(([k, title]) => ({ title, primary: "ghost",
-      items: (latest.sections?.[k] || []).map(i => ({ q: queue.find(q => q.id === i.id) ? { ...i, inQueue: true } : i, acts: queue.find(q => q.id === i.id) ? [] : ["add"] })) })),
+    digest: [["Urgent", latest.sections?.urgent],
+      ...[...new Set((latest.sections?.project || []).map(i => i.project))].map(p => [`For ${p}`, latest.sections.project.filter(i => i.project === p)]),
+      ["To learn", latest.sections?.learn], ["Worth knowing", latest.sections?.aware]].map(([title, list]) => ({ title, primary: "ghost",
+      items: (list || []).map(i => ({ q: queue.find(q => q.id === i.id) ? { ...i, inQueue: true } : i, acts: queue.find(q => q.id === i.id) ? [] : ["add"] })) })),
     done: [{ title: "Finished and skipped", primary: "ghost", items: queue.filter(q => q.status === "done" || q.status === "skipped")
       .sort((a, b) => (b.done || "").localeCompare(a.done || "")).slice(0, 60).map(q => ({ q, acts: ["requeue"] })) }],
   };
   const f = filter.toLowerCase();
-  return G[view].map(g => ({ ...g, items: f ? g.items.filter(({ q }) => `${q.title} ${q.source} ${q.why}`.toLowerCase().includes(f)) : g.items })).filter(g => g.items.length);
+  return G[view].map(g => ({ ...g, items: f ? g.items.filter(({ q }) => `${q.title} ${q.source} ${q.why} ${q.project || ""}`.toLowerCase().includes(f)) : g.items })).filter(g => g.items.length);
 }
 
 const initials = s => { const w = String(s || "?").replace(/[^\p{L}\p{N} ]/gu, "").split(/\s+/).filter(Boolean); return ((w[0]?.[0] || "?") + (w[1]?.[0] || "")).toUpperCase(); };
@@ -475,6 +478,7 @@ function rowHTML({ q, acts }, i, primary) {
   }
   if (q.status === "done") bits.push(`<span class="badge good">${ico("check")}Finished${q.done ? " " + ago(q.done) : ""}</span>`);
   if (q.status === "skipped") bits.push(`<span class="badge">Skipped${q.done ? " " + ago(q.done) : ""}</span>`);
+  if (q.project) bits.unshift(`<span class="badge proj">${esc(q.project)}</span>`);
   bits.push(`<span>${esc(q.source || "")}</span>`);
   if (q.effort) bits.push(`<span class="mono">${esc(q.effort)}</span>`);
   if (q.status === "queued" && q.added) bits.push(`<span>added ${ago(q.added)}</span>`);
