@@ -704,6 +704,16 @@ async function connect(v, errSel) {
 }
 
 let lastError = "";
+// A valid token that can't see the private repo gets 404 (403 = repo visible, Contents permission missing).
+// Ask GitHub who owns the token so the message names the actual fix.
+async function whyHidden(status) {
+  const u = await fetch("https://api.github.com/user", { headers: { Authorization: "Bearer " + token } }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (u?.login && u.login.toLowerCase() !== OWNER.toLowerCase())
+    return `This token belongs to ${u.login}, not ${OWNER}. Sign in to GitHub as ${OWNER} and create the token there.`;
+  return status === 403 ? `The token sees ${REPO} but lacks Contents permission. Edit the token: Permissions → Contents → Read and write.`
+    : `The token works but can't see ${REPO}. Edit the token: Repository access → Only select repositories → ${REPO}, then Contents → Read and write.`;
+}
+
 async function load() {
   setSync("loading");
   try {
@@ -714,7 +724,7 @@ async function load() {
     return true;
   } catch (e) {
     lastError = e.status === 401 ? "GitHub rejected that token (401). Check it was copied in full."
-      : e.status === 404 || e.status === 403 ? `That token can't see ${OWNER}/${REPO} (${e.status}). Give it access to that repo with Contents: read.`
+      : e.status === 404 || e.status === 403 ? await whyHidden(e.status)
       : !token ? "" : `Couldn't load: ${e.message}`;
     if (!loaded) showConnect(lastError);
     return false;
