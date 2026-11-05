@@ -917,7 +917,8 @@ async function load() {
     setSync(token ? "saved" : "readonly"); renderAll(true);
     return true;
   } catch (e) {
-    lastError = e.status === 401 ? "GitHub rejected that token (401). Check it was copied in full."
+    lastError = e.noToken ? ""  // a browser with no token yet: the connect steps say it all
+      : e.status === 401 ? "GitHub rejected that token (401). Check it was copied in full."
       : e.status === 404 || e.status === 403 ? await whyHidden(e.status)
       : !token ? "" : `Couldn't load: ${e.message}`;
     if (!loaded) showConnect(lastError);
