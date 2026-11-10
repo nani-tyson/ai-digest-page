@@ -713,8 +713,8 @@ function detailHTML(q) {
     <div class="dmeta">${b.gain ? `<span>Gain: ${esc(b.gain)}${b.evidence ? ` (${esc(b.evidence)})` : ""}</span>` : ""}${b.effort ? `<span>Effort: ${esc(b.effort)}</span>` : ""}${b.decision ? `<span>Informs: ${esc(b.decision)}</span>` : ""}</div>
     ${b.fit ? `<div class="dfit">${esc(b.fit)}</div>` : ""}${b.questions?.length ? `<h4 style="margin-top:14px">Dig into</h4><ol>${li(b.questions)}</ol>` : ""}
     ${b.note ? `<p class="meta" style="margin-top:10px">${esc(b.note)}</p>` : ""}
-    <div class="dfoot">${p?.repos?.length ? `<a class="btn solid" href="digest-audit://${esc(q.id)}">${ico("play")}Audit in Claude</a>` : ""}<button class="btn ghost" data-discuss="${esc(q.id)}">${ico("copy")}Copy for discussion</button>
-      <span class="meta">${p?.repos?.length ? `Audit opens Terminal: Claude reads ${esc(p.repos[0])} and writes an HTML page (needs the DigestAudit helper, see README)` : "paste it to Claude to dig in with the project card attached"}</span></div></div>`;
+    <div class="dfoot">${p?.repos?.length ? `<a class="btn solid" href="digest-audit://${esc(q.id)}">${ico("play")}Audit + test in Claude</a>` : ""}<button class="btn ghost" data-discuss="${esc(q.id)}">${ico("copy")}Copy for discussion</button>
+      <span class="meta">${p?.repos?.length ? `Opens Terminal: Claude audits ${esc(p.repos[0])} against the paper, tests it in a throwaway copy if it can be measured, Codex double-checks. Runs on your Claude/Codex plans, no API keys` : "paste it to Claude to dig in with the project card attached"}</span></div></div>`;
 }
 
 const findItem = id => Object.values(latest.sections || {}).flat().find(i => i.id === id && i.brief) || queue.find(q => q.id === id);
